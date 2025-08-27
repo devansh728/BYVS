@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to the BYVS Family!</title>
+    <!-- Inline CSS for maximum email client compatibility -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background-color: #2c3e50;
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .content {
+            padding: 30px;
+            line-height: 1.6;
+            color: #333333;
+        }
+        .content h2 {
+            font-size: 22px;
+            color: #e74c3c;
+            margin-top: 0;
+        }
+        .content p {
+            font-size: 16px;
+        }
+        .membership-info {
+            background-color: #ecf0f1;
+            padding: 15px;
+            text-align: center;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .membership-info p {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #3498db;
+            color: #ffffff;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <!-- Email Header -->
+    <div class="header">
+        <h1>BHARTIYA YUVA VIDYARTHI SANGATHAN (BYVS)</h1>
+    </div>
+
+    <!-- Email Body Content -->
+    <div class="content">
+        <!-- Welcome Message with Dynamic Name -->
+        <h2 th:text="'Hello, ' + ${name} + '!'">Hello!</h2>
+        <p>On behalf of the entire BYVS family, we extend a warm welcome to you. We are thrilled to have you join our mission of building a nationwide network of conscious, courageous, and committed youth dedicated to Dharma, Rashtra, and Sanskriti.</p>
+
+        <!-- Dynamic Membership ID Display -->
+        <div class="membership-info">
+            <p>Your Membership ID is: <b th:text="${membershipId}">BYVS-MEMBER-ID</b></p>
+        </div>
+
+        <!-- About BYVS -->
+        <p>Bhartiya Yuva Vidyarthi Sangathan (BYVS) is a vibrant youth movement founded in March 2020 by Raja Saksham Singh Yogi, Yash Pratap Singh, and Raj Shekhar Singh. Born out of a deep sense of duty towards the nation, BYVS gained widespread recognition for its ground-level service during the challenging times of the Covid-19 pandemic—delivering relief, hope, and strength to communities in need.</p>
+
+        <p>Guided by the spiritual inspiration of Jagadguru Shankaracharya of Jyotirmath, we are deeply anchored in the ideals of Sanatan Dharma. We are committed to awakening the youth of Bharat to their dharmic, cultural, and national responsibilities.</p>
+
+        <p>From value-based workshops and community service drives to educational outreach and social justice advocacy, we stand at the forefront of shaping the next generation of national leaders.</p>
+
+        <!-- Call-to-Action -->
+        <p style="text-align: center; margin-top: 30px;">
+            <a href="https://byys-frontend.vercel.app/" class="cta-button">Explore More About BYVS</a>
+        </p>
+    </div>
+
+    <!-- Email Footer -->
+    <div class="footer">
+        <p>&copy; <span th:text="${#dates.year(#dates.createNow())}">2024</span> Bhartiya Yuva Vidyarthi Sangathan (BYVS). All Rights Reserved.</p>
+    </div>
+</div>
+</body>
+</html>

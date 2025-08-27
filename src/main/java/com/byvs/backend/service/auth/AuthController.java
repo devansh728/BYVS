@@ -15,10 +15,7 @@ import com.byvs.backend.service.user.UserProfileRepository;
 import com.byvs.backend.service.user.UserRepository;
 import com.byvs.backend.service.util.ImageCompressionUtil;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.flywaydb.core.internal.util.StringUtils;
@@ -66,6 +63,45 @@ public class AuthController {
     public record SendOtpRequest(@NotBlank @Pattern(regexp = "^\\+[1-9]\\d{1,14}$") String phone) {
     }
 
+    public record ProfileUpdateRequest(
+            @Size(min = 2, max = 100, message = "Full name must be between 2 and 100 characters")
+            String fullName,
+
+            @Pattern(regexp = "^\\+[1-9]\\d{1,14}$", message = "Invalid phone number")
+            String phone,
+
+            Integer age,
+
+            @Email(message = "Invalid email address")
+            String email,
+
+            @Pattern(regexp = "^\\+[1-9]\\d{1,14}$", message = "Invalid WhatsApp number")
+            String whatsappNumber,
+
+            @Size(max = 100, message = "Village/Town/City name cannot exceed 100 characters")
+            String villageTownCity,
+
+            @Size(max = 100, message = "Block name cannot exceed 100 characters")
+            String blockName,
+
+            @Size(max = 100, message = "District name cannot exceed 100 characters")
+            String district,
+
+            @Size(max = 100, message = "State name cannot exceed 100 characters")
+            String state,
+
+            @Size(max = 100, message = "Profession cannot exceed 100 characters")
+            String profession,
+
+            @Size(max = 255, message = "Institution name cannot exceed 255 characters")
+            String institutionName,
+
+            @Size(max = 255, message = "Institution address cannot exceed 255 characters")
+            String institutionAddress,
+
+            Boolean deletePhoto
+    ) {}
+
     public record VerifyOtpRequest(@NotBlank @Pattern(regexp = "^\\+[1-9]\\d{1,14}$") String phone,
                                    @NotBlank String otp,
                                    String referralCode,
@@ -85,8 +121,7 @@ public class AuthController {
             @NotBlank String profession,
             @NotBlank String institutionName,
             @NotBlank String institutionAddress,
-            String referralCode,
-            MultipartFile photo
+            String referralCode
     ) {
     }
 
@@ -123,8 +158,6 @@ public class AuthController {
                 profile.setProfession(request.profession());
                 profile.setInstitutionName(request.institutionName());
                 profile.setInstitutionAddress(request.institutionAddress());
-
-                // Handle photo upload
                 if (photo != null && !photo.isEmpty()) {
                     if (!ImageCompressionUtil.isImage(photo)) {
                         throw new IllegalArgumentException("File is not a valid image");
@@ -133,20 +166,31 @@ public class AuthController {
                     if (!ImageCompressionUtil.isImageSizeValid(photo, MAX_IMAGE_SIZE)) {
                         throw new IllegalArgumentException("Image size exceeds the maximum allowed size of 5MB");
                     }
+
                     try {
                         byte[] compressedImage = ImageCompressionUtil.compressAndSave(
                                 photo, COMPRESSION_QUALITY, MAX_IMAGE_WIDTH, MAX_IMAGE_HEIGHT
                         );
-                        BufferedImage image = ImageIO.read(new ByteArrayInputStream(compressedImage));
-                        profile.setPhoto(compressedImage);
-                        profile.setPhotoContentType(photo.getContentType());
-                        profile.setPhotoWidth(image.getWidth());
-                        profile.setPhotoHeight(image.getHeight());
+
+                        // Check if the compression returned a valid byte array
+                        if (compressedImage != null && compressedImage.length > 0) {
+                            BufferedImage image = ImageIO.read(new ByteArrayInputStream(photo.getBytes()));
+                            profile.setPhotoData(photo.getBytes());
+                            profile.setPhotoContentType(photo.getContentType());
+                            profile.setPhotoWidth(image.getWidth());
+                            profile.setPhotoHeight(image.getHeight());
+                        } else {
+                            throw new IOException("Compressed image data is empty or null");
+                        }
+
                     } catch (IOException e) {
-                        log.warn("Photo compression produces an error");
+                        log.error("Photo compression or processing failed", e);
+                        // Rollback the transaction and throw a detailed exception
+                        throw new RuntimeException("Registration failed due to photo processing error", e);
                     }
+                } else {
+                    profile.setPhotoData(null);
                 }
-                // Generate membership ID
                 String membershipId = "BYVS" + String.format("%08d", user.getId());
                 profile.setMembershipId(membershipId);
                 profile.setJoinedAt(LocalDateTime.now());
@@ -185,6 +229,9 @@ public class AuthController {
             } catch (Exception e) {
                 status.setRollbackOnly();
                 log.error("Registration failed", e);
+                if (e instanceof IllegalArgumentException) {
+                    return ResponseEntity.badRequest().body(e.getMessage());
+                }
                 return ResponseEntity.internalServerError().body("Registration failed");
             }
         });
@@ -268,6 +315,136 @@ public class AuthController {
         return code;
     }
 
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Transactional
+    public ResponseEntity<?> update(
+            @AuthenticationPrincipal UserDetails principal,
+            @Valid @RequestPart ProfileUpdateRequest request,
+            @RequestPart(required = false) MultipartFile photo
+    ) {
+
+        if (principal == null || principal.getUsername() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Authentication required"));
+        }
+        return transactionTemplate.execute(status -> {
+            try {
+                // Find the user and profile
+                User user = userRepository.findByPhone(principal.getUsername())
+                        .orElseThrow(() -> new RuntimeException("User not found"));
+
+                long userId = user.getId();
+                UserProfile existingProfile = userProfileRepository.findByUserId(userId)
+                        .orElse(new UserProfile());
+
+                // Check if phone number is being updated
+                if (request.phone() != null && !request.phone().equals(user.getPhone())) {
+                    if (userRepository.existsByPhone(request.phone())) {
+                        throw new IllegalArgumentException("Phone number is already in use");
+                    }
+                    user.setPhone(request.phone());
+                }
+
+                // Update user details
+                if (request.fullName() != null) {
+                    user.setFullName(request.fullName());
+                }
+                userRepository.save(user);
+
+                // Update profile details
+                if (request.age() != null) {
+                    existingProfile.setAge(request.age());
+                }
+                if (request.email() != null) {
+                    existingProfile.setEmail(request.email());
+                }
+                if (request.whatsappNumber() != null) {
+                    existingProfile.setWhatsappNumber(request.whatsappNumber());
+                }
+                if (request.villageTownCity() != null) {
+                    existingProfile.setVillageTownCity(request.villageTownCity());
+                }
+                if (request.blockName() != null) {
+                    existingProfile.setBlockName(request.blockName());
+                }
+                if (request.district() != null) {
+                    existingProfile.setDistrict(request.district());
+                }
+                if (request.state() != null) {
+                    existingProfile.setState(request.state());
+                }
+                if (request.profession() != null) {
+                    existingProfile.setProfession(request.profession());
+                }
+                if (request.institutionName() != null) {
+                    existingProfile.setInstitutionName(request.institutionName());
+                }
+                if (request.institutionAddress() != null) {
+                    existingProfile.setInstitutionAddress(request.institutionAddress());
+                }
+
+                // Handle photo update
+                if (photo != null && !photo.isEmpty()) {
+                    if (!ImageCompressionUtil.isImage(photo)) {
+                        throw new IllegalArgumentException("File is not a valid image");
+                    }
+                    if (!ImageCompressionUtil.isImageSizeValid(photo, MAX_IMAGE_SIZE)) {
+                        throw new IllegalArgumentException("Image size exceeds the maximum allowed size of 5MB");
+                    }
+
+                    try {
+                        byte[] compressedImage = ImageCompressionUtil.compressAndSave(
+                                photo, COMPRESSION_QUALITY, MAX_IMAGE_WIDTH, MAX_IMAGE_HEIGHT
+                        );
+
+                        if (compressedImage != null && compressedImage.length > 0) {
+                            BufferedImage image = ImageIO.read(new ByteArrayInputStream(compressedImage));
+                            existingProfile.setPhotoData(compressedImage);
+                            existingProfile.setPhotoContentType(photo.getContentType());
+                            existingProfile.setPhotoWidth(image.getWidth());
+                            existingProfile.setPhotoHeight(image.getHeight());
+                        } else {
+                            throw new IOException("Compressed image data is empty or null");
+                        }
+                    } catch (IOException e) {
+                        log.error("Photo compression or processing failed", e);
+                        throw new RuntimeException("Profile update failed due to photo processing error", e);
+                    }
+                } else if (request.deletePhoto() != null && request.deletePhoto()) {
+                    // Allows clients to explicitly request photo deletion by passing a flag
+                    existingProfile.setPhotoData(null);
+                    existingProfile.setPhotoContentType(null);
+                    existingProfile.setPhotoWidth(null);
+                    existingProfile.setPhotoHeight(null);
+                }
+
+                userProfileRepository.save(existingProfile);
+
+                // Generate new token if phone number was updated
+                String newToken = null;
+                if (request.phone() != null && !request.phone().equals(user.getPhone())) {
+                    newToken = jwtService.generate(user.getPhone(), "USER");
+                }
+
+                Map<String, Object> responseBody = new HashMap<>();
+                responseBody.put("message", "Profile updated successfully");
+                if (newToken != null) {
+                    responseBody.put("token", newToken);
+                    responseBody.put("message", "Profile updated successfully. A new token has been generated due to phone number change.");
+                }
+
+                return ResponseEntity.ok().body(responseBody);
+
+            } catch (Exception e) {
+                status.setRollbackOnly();
+                log.error("Profile update failed", e);
+                if (e instanceof IllegalArgumentException) {
+                    return ResponseEntity.badRequest().body(e.getMessage());
+                }
+                return ResponseEntity.internalServerError().body("Profile update failed");
+            }
+        });
+    }
+
     @GetMapping("/user/photo")
     @Transactional
     public ResponseEntity<?> getUserPhoto(@AuthenticationPrincipal UserDetails principal) {
@@ -276,7 +453,7 @@ public class AuthController {
         }
         User user = userRepository.findByPhone(principal.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        Optional<byte[]> photoData = userProfileRepository.findPhotoById(user.getId());
+        Optional<byte[]> photoData = userProfileRepository.findPhotoDataById(user.getId());
 
         if (photoData.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -287,6 +464,8 @@ public class AuthController {
 
         return new ResponseEntity<>(photoData.get(), headers, HttpStatus.OK);
     }
+
+
 
     @GetMapping("/me")
     @Transactional
@@ -331,7 +510,7 @@ public class AuthController {
     }
 
     private boolean isAdminUser(String username) {
-        return Arrays.asList("+919026562139", "+919508245925", "9026562139").contains(username);
+        return Arrays.asList("+919508245925", "9508245925").contains(username);
     }
 }
 

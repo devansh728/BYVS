@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Congratulations! Your Office Bearer Application Approved</title>
+    <!-- Inline CSS for maximum email client compatibility -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background-color: #2c3e50;
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .content {
+            padding: 30px;
+            line-height: 1.6;
+            color: #333333;
+        }
+        .content h2 {
+            font-size: 22px;
+            color: #e74c3c;
+            margin-top: 0;
+        }
+        .content p {
+            font-size: 16px;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #2ecc71;
+            color: #ffffff;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <!-- Email Header -->
+    <div class="header">
+        <h1>BHARTIYA YUVA VIDYARTHI SANGATHAN (BYVS)</h1>
+    </div>
+
+    <!-- Email Body Content -->
+    <div class="content">
+        <!-- Congratulatory Message with Dynamic Name -->
+        <h2 th:text="'Congratulations, ' + ${name} + '!'">Congratulations!</h2>
+        <p>On behalf of the entire BYVS family, we are delighted to inform you that your application for an Office Bearer position has been approved. This is a testament to your dedication and commitment to our shared mission.</p>
+        <p>As an Office Bearer, you will play a crucial role in advancing our work for Dharma, Rashtra, and Sanskriti. Your leadership will be instrumental in shaping the next generation of national leaders and continuing our legacy of selfless service.</p>
+        <p>We are excited to have you join our leadership team and look forward to the great work we will accomplish together. Your commitment to our ideals will help us grow and make a lasting impact on our communities.</p>
+
+        <!-- Call-to-Action -->
+        <p style="text-align: center; margin-top: 30px;">
+            <a href="https://byys-frontend.vercel.app/" class="cta-button">Join Your Team</a>
+        </p>
+    </div>
+
+    <!-- Email Footer -->
+    <div class="footer">
+        <p>&copy; <span th:text="${#dates.year(#dates.createNow())}">2024</span> Bhartiya Yuva Vidyarthi Sangathan (BYVS). All Rights Reserved.</p>
+    </div>
+</div>
+</body>
+</html>
