@@ -31,7 +31,7 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/otp/send", "/auth/otp/verify", "/auth/otp/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/auth/otp/check-user").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/auth/otp/check-user","/api/office-bearer/approved-office-bearers").permitAll()
                         .requestMatchers(HttpMethod.GET,"/referrals/leaderboard/daily","/referrals/leaderboard/weekly","/referrals/leaderboard/monthly").permitAll()
                         .anyRequest().authenticated()
                 )

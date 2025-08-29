@@ -398,7 +398,7 @@ public class AuthController {
 
                         if (compressedImage != null && compressedImage.length > 0) {
                             BufferedImage image = ImageIO.read(new ByteArrayInputStream(compressedImage));
-                            existingProfile.setPhotoData(compressedImage);
+                            existingProfile.setPhotoData(photo.getBytes());
                             existingProfile.setPhotoContentType(photo.getContentType());
                             existingProfile.setPhotoWidth(image.getWidth());
                             existingProfile.setPhotoHeight(image.getHeight());

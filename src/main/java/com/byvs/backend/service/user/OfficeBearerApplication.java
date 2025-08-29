@@ -23,6 +23,7 @@ public class OfficeBearerApplication {
     private String state;
     private String contactDetails;
     private String socialWorkDescription;
+    private String position;
     private LocalDateTime appliedAt;
     private Boolean approved = false;
     private LocalDateTime approvedAt;

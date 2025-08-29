@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,9 +18,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 @RequestMapping("/api/office-bearer")
 public class OfficeBearerController {
 
@@ -96,6 +100,34 @@ public class OfficeBearerController {
                 "status", application.get().getApproved() ? "APPROVED" : "PENDING",
                 "application", application.get()
         ));
+    }
+    @GetMapping("/approved-office-bearers")
+    @Cacheable(value = "approvedOfficeBearers", key = "#district")
+    public ResponseEntity<?> getAllApprovedOfficeBearer(@RequestParam(required = false) String district){
+        try{
+            log.info("API call received to fetch approved office bearers for district: {}", district);
+            if (district == null || district.trim().isEmpty()) {
+                log.warn("Bad Request: District parameter is null or empty.");
+                return ResponseEntity.badRequest().body("District parameter cannot be empty.");
+            }
+            List<OfficeBearerApplication> applications = appRepository.findByDistrictAndApprovedTrue(district);
+
+            List<Map<String, Object>> userDataList = applications.stream()
+                    .map(application -> Map.of(
+                            "position", application.getPosition() != null ? application.getPosition() : "Unknown",
+                            "userData", application.getUser()
+                    ))
+                    .collect(Collectors.toList());
+            if (userDataList.isEmpty()) {
+                log.info("No approved office bearers found for district: {}. Returning an empty list.", district);
+            } else {
+                log.info("Successfully fetched {} approved office bearers for district: {}.", userDataList.size(), district);
+            }
+
+            return ResponseEntity.ok(userDataList);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Internal Server issue");
+        }
     }
 
     @GetMapping("/get-tasks")
