@@ -492,7 +492,13 @@ public class AuthController {
         response.put("lastLogin", user.getLastLoginAt() != null ? user.getLastLoginAt() : "");
         response.put("state", profile.getState() != null ? profile.getState() : "");
         response.put("district", profile.getDistrict() != null ? profile.getDistrict() : "");
-
+        response.put("age", profile.getAge() != null ? profile.getAge() : "");
+        response.put("whatsappNumber", profile.getWhatsappNumber() != null ? profile.getWhatsappNumber() : "");
+        response.put("villageTownCity", profile.getVillageTownCity() != null ? profile.getVillageTownCity() : "");
+        response.put("blockName", profile.getBlockName() != null ? profile.getBlockName() : "");
+        response.put("profession", profile.getProfession() != null ? profile.getProfession() : "");
+        response.put("institutionName", profile.getInstitutionName() != null ? profile.getInstitutionName() : "");
+        response.put("institutionAddress", profile.getInstitutionAddress() != null ? profile.getInstitutionAddress() : "");
         if (profile.getJoinedAt() != null) {
             response.put("joinedDate", profile.getJoinedAt().atZone(ZoneId.systemDefault()).toLocalDate().toString());
         } else {
