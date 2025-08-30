@@ -32,7 +32,7 @@ public class OtpService {
 
     public String generateAndStore(String phone) {
         enforceRateLimit(phone);
-        String otp = String.format("%06d", random.nextInt(1_000_000));
+        String otp = String.format("%05d", random.nextInt(100_000));
         otpCache.put(phone, otp);
         return otp;
     }

@@ -8,6 +8,7 @@ import com.byvs.backend.service.referral.ReferralEventType;
 import com.byvs.backend.service.referral.ReferralTrackingService;
 import com.byvs.backend.service.security.JwtService;
 import com.byvs.backend.service.service.EmailService;
+import com.byvs.backend.service.sms.BullSmsService;
 import com.byvs.backend.service.sms.SmsService;
 import com.byvs.backend.service.user.User;
 import com.byvs.backend.service.user.UserProfile;
@@ -48,6 +49,7 @@ public class AuthController {
 
     private final OtpService otpService;
     private final SmsService smsService;
+    private final BullSmsService bullSmsService;
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final ReferralTrackingService referralTrackingService;
@@ -259,8 +261,7 @@ public class AuthController {
     public ResponseEntity<?> sendOtp(@Valid @RequestBody SendOtpRequest request) {
         try {
             String otp = otpService.generateAndStore(request.phone());
-            String message = "Your OTP for ReferralApp is " + otp + ". Valid for 5 minutes.";
-            smsService.sendOtp(request.phone(), message);
+            bullSmsService.sendOtpSms(request.phone(),otp);
             return ResponseEntity.accepted().build();
         } catch (OtpRateLimitException e) {
             return ResponseEntity.status(429).body(e.getMessage());
