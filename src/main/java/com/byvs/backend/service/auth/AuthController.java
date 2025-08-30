@@ -319,8 +319,8 @@ public class AuthController {
     @Transactional
     public ResponseEntity<?> update(
             @AuthenticationPrincipal UserDetails principal,
-            @Valid @RequestPart ProfileUpdateRequest request,
-            @RequestPart(required = false) MultipartFile photo
+            @Valid @RequestPart("request") ProfileUpdateRequest request,
+            @RequestPart(name = "photo", required = false) MultipartFile photo
     ) {
 
         if (principal == null || principal.getUsername() == null) {
