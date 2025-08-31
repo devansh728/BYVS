@@ -42,16 +42,13 @@ public class BullSmsService {
                 cleanedMobileNumber = mobileNumber.substring(3); // Removes the first 3 characters "+91"
             }
 
-            String encodedMessage = URLEncoder.encode(
-                    "Dear Customer, Your OTP is " + otp + " for BYVS Login, Please do not share this OTP. Regards",
-                    StandardCharsets.UTF_8
-            );
+            String message = "Dear Customer, Your OTP is " + otp + " for BYVS Login, Please do not share this OTP. Regards";
 
             String finalUrl = apiUrl +
                     "user=" + user +
                     "&key=" + key +
                     "&mobile=" + cleanedMobileNumber +
-                    "&message=" + encodedMessage +
+                    "&message=" + message +
                     "&senderid=" + senderId +
                     "&accusage=" + accUsage +
                     "&entityid=" + entityId +
