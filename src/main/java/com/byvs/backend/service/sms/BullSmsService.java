@@ -36,6 +36,12 @@ public class BullSmsService {
 
     public void sendOtpSms(String mobileNumber, String otp) {
         try {
+
+            String cleanedMobileNumber = mobileNumber;
+            if (mobileNumber.startsWith("+91")) {
+                cleanedMobileNumber = mobileNumber.substring(3); // Removes the first 3 characters "+91"
+            }
+
             String encodedMessage = URLEncoder.encode(
                     "Dear Customer, Your OTP is " + otp + " for BYVS Login, Please do not share this OTP. Regards",
                     StandardCharsets.UTF_8
@@ -44,14 +50,14 @@ public class BullSmsService {
             String finalUrl = apiUrl +
                     "user=" + user +
                     "&key=" + key +
-                    "&mobile=" + mobileNumber +
+                    "&mobile=" + cleanedMobileNumber +
                     "&message=" + encodedMessage +
                     "&senderid=" + senderId +
                     "&accusage=" + accUsage +
                     "&entityid=" + entityId +
                     "&tempid=" + tempId;
 
-            log.info("Sending OTP to mobile: {}", mobileNumber);
+            log.info("Sending OTP to mobile: {}", cleanedMobileNumber);
             String response = restTemplate.getForObject(finalUrl, String.class);
             log.info("BulkSMS API response: {}", response);
 
