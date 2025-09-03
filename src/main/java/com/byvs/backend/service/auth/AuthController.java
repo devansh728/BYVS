@@ -517,7 +517,7 @@ public class AuthController {
     }
 
     private boolean isAdminUser(String username) {
-        return Arrays.asList("+919508245925", "9508245925").contains(username);
+        return Arrays.asList("+919508245925", "9508245925", "8960384718", "+918960384718", "+919026562139", "9026562139").contains(username);
     }
 }
 

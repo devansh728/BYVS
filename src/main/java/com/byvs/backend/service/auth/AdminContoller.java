@@ -104,6 +104,9 @@ public class AdminContoller {
         try {
             emailService.sendOfficeBearerApprovalEmail(
                     profile.getEmail(),
+                    profile.getDistrict(),
+                    profile.getState(),
+                    application.getPosition(),
                     user.getFullName()
             );
             log.info("Initiated welcome email sending for {}", profile.getEmail());

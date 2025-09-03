@@ -4,88 +4,212 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Congratulations! Your Office Bearer Application Approved</title>
-    <!-- Inline CSS for maximum email client compatibility -->
     <style>
+        /* Reset CSS for email compatibility */
+        body, table, td, a {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+            border-collapse: collapse;
+        }
+        img {
+            -ms-interpolation-mode: bicubic;
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
         body {
-            font-family: Arial, sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            background-color: #f7f7f7;
+            color: #333333;
         }
         .email-container {
-            max-width: 600px;
-            margin: 20px auto;
+            width: 100%;
             background-color: #ffffff;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
         .header {
-            background-color: #2c3e50;
+            background: linear-gradient(135deg, #2c3e50 0%, #1a2530 100%);
             color: #ffffff;
             text-align: center;
-            padding: 20px;
+            padding: 30px 20px;
         }
         .header h1 {
             margin: 0;
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
+            line-height: 1.4;
+        }
+        .logo {
+            max-width: 120px;
+            margin-bottom: 15px;
         }
         .content {
-            padding: 30px;
+            padding: 35px 30px;
             line-height: 1.6;
-            color: #333333;
+            color: #444444;
+            font-size: 16px;
         }
         .content h2 {
-            font-size: 22px;
+            font-size: 24px;
             color: #e74c3c;
             margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .content h3 {
+            font-size: 18px;
+            color: #2c3e50;
+            margin: 15px 0 5px;
+            font-weight: 600;
         }
         .content p {
-            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.7;
+        }
+        .highlight-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #2ecc71;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 0 4px 4px 0;
         }
         .cta-button {
             display: inline-block;
-            background-color: #2ecc71;
+            background: linear-gradient(to right, #2ecc71, #27ae60);
             color: #ffffff;
-            padding: 12px 24px;
+            padding: 14px 30px;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 4px;
             font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+            margin: 20px 0;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+        .cta-button:hover {
+            background: linear-gradient(to right, #27ae60, #219653);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
         .footer {
             text-align: center;
-            padding: 20px;
-            font-size: 12px;
+            padding: 25px 20px;
+            font-size: 13px;
             color: #7f8c8d;
+            background-color: #f4f6f7;
+            border-top: 1px solid #e5e7e9;
+        }
+        .social-links {
+            margin: 15px 0;
+        }
+        .social-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #3498db;
+            text-decoration: none;
+        }
+        .position-details {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border: 1px solid #eeeeee;
+        }
+        .position-details div {
+            margin: 8px 0;
+            font-size: 15px;
+        }
+        .position-details strong {
+            color: #2c3e50;
+            margin-right: 8px;
+        }
+        @media only screen and (max-width: 480px) {
+            .content {
+                padding: 25px 20px;
+            }
+            .header h1 {
+                font-size: 22px;
+            }
+            .content h2 {
+                font-size: 21px;
+            }
+            .cta-button {
+                padding: 12px 25px;
+                font-size: 15px;
+            }
         }
     </style>
 </head>
 <body>
-<div class="email-container">
-    <!-- Email Header -->
-    <div class="header">
-        <h1>BHARTIYA YUVA VIDYARTHI SANGATHAN (BYVS)</h1>
-    </div>
+<center class="container">
+    <div class="email-container">
+        <!-- Email Header -->
+        <div class="header">
+            <!-- Logo placeholder - replace with actual logo URL -->
+            <h1>BHARTIYA YUVA VIDYARTHI SANGATHAN</h1>
+        </div>
 
-    <!-- Email Body Content -->
-    <div class="content">
-        <!-- Congratulatory Message with Dynamic Name -->
-        <h2 th:text="'Congratulations, ' + ${name} + '!'">Congratulations!</h2>
-        <p>On behalf of the entire BYVS family, we are delighted to inform you that your application for an Office Bearer position has been approved. This is a testament to your dedication and commitment to our shared mission.</p>
-        <p>As an Office Bearer, you will play a crucial role in advancing our work for Dharma, Rashtra, and Sanskriti. Your leadership will be instrumental in shaping the next generation of national leaders and continuing our legacy of selfless service.</p>
-        <p>We are excited to have you join our leadership team and look forward to the great work we will accomplish together. Your commitment to our ideals will help us grow and make a lasting impact on our communities.</p>
+        <!-- Email Body Content -->
+        <div class="content">
+            <!-- Congratulatory Message with Dynamic Name -->
+            <h2 th:text="'Congratulations, ' + ${name} + '!'">Congratulations!</h2>
 
-        <!-- Call-to-Action -->
-        <p style="text-align: center; margin-top: 30px;">
-            <a href="https://byys-frontend.vercel.app/" class="cta-button">Join Your Team</a>
-        </p>
-    </div>
+            <p>On behalf of the entire BYVS family, we are delighted to inform you that your application for an Office Bearer position has been approved. This is a testament to your dedication and commitment to our shared mission.</p>
 
-    <!-- Email Footer -->
-    <div class="footer">
-        <p>&copy; <span th:text="${#dates.year(#dates.createNow())}">2024</span> Bhartiya Yuva Vidyarthi Sangathan (BYVS). All Rights Reserved.</p>
+            <!-- Position Details -->
+            <div class="position-details">
+                <div><strong>Position:</strong> <span th:text="${position}">Position</span></div>
+                <div><strong>State:</strong> <span th:text="${state}">State</span></div>
+                <div><strong>District:</strong> <span th:text="${district}">District</span></div>
+            </div>
+
+            <p>As an Office Bearer, you will play a crucial role in advancing our work for Dharma, Rashtra, and Sanskriti. Your leadership will be instrumental in shaping the next generation of national leaders and continuing our legacy of selfless service.</p>
+
+            <div class="highlight-box">
+                <p>We are excited to have you join our leadership team and look forward to the great work we will accomplish together. Your commitment to our ideals will help us grow and make a lasting impact on our communities.</p>
+            </div>
+
+            <!-- Call-to-Action -->
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="https://www.byvs.org/dashboard" class="cta-button">Access Your Dashboard</a>
+            </div>
+
+            <p style="text-align: center; font-size: 14px; color: #7f8c8d;">
+                You will receive additional information and onboarding materials within 3-5 business days.
+            </p>
+        </div>
+
+        <!-- Email Footer -->
+        <div class="footer">
+            <p>With gratitude,<br><strong>Bhartiya Yuva Vidyarthi Sangathan</strong></p>
+
+            <div class="social-links">
+                <a href="https://www.byvs.org/">Website</a> •
+                <a href="#">Facebook</a> •
+                <a href="#">Twitter</a> •
+                <a href="#">Instagram</a>
+            </div>
+
+            <p>&copy; <span th:text="${#dates.year(#dates.createNow())}">2025</span> Bhartiya Yuva Vidyarthi Sangathan (BYVS).<br>All Rights Reserved.</p>
+
+            <p style="font-size: 12px; color: #95a5a6; margin-top: 15px;">
+                This is an automated message. Please do not reply to this email.
+            </p>
+        </div>
     </div>
-</div>
+</center>
 </body>
 </html>

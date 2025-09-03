@@ -47,9 +47,12 @@ public class EmailService {
         }
     }
     @Async
-    public void sendOfficeBearerApprovalEmail(String toEmail, String fullName) {
+    public void sendOfficeBearerApprovalEmail(String toEmail,String District,String State,String Position, String fullName) {
         Context context = new Context();
         context.setVariable("name", fullName);
+        context.setVariable("district", District);
+        context.setVariable("state", State);
+        context.setVariable("position", Position);
 
         String htmlContent = templateEngine.process("office-bearer-approval", context);
 

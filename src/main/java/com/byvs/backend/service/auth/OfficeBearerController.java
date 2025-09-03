@@ -38,6 +38,8 @@ public class OfficeBearerController {
             @NotBlank(message = "State is required")
             String state,
 
+            String position,
+
             @NotBlank(message = "Contact details are required")
             @Pattern(regexp = "^\\+[1-9]\\d{1,14}$", message = "Invalid contact number format")
             String contactDetails,
@@ -73,6 +75,7 @@ public class OfficeBearerController {
         application.setUser(user);
         application.setDistrict(request.district());
         application.setState(request.state());
+        application.setPosition(request.position());
         application.setContactDetails(request.contactDetails());
         application.setSocialWorkDescription(request.socialWorkDescription());
         application.setAppliedAt(LocalDateTime.now());
