@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface UserProfileRepository extends JpaRepository<UserProfile,Long> {
     Optional<UserProfile> findByUser(User user);
     Optional<UserProfile> findByUserId(Long userId);
-    Optional<UserProfile> findByUserEmail(String email);
+    Optional<UserProfile> findByEmail(String email);
     @Query("SELECT u.photoData FROM UserProfile u WHERE u.id = :id")
     Optional<byte[]> findPhotoDataById(@Param("id") Long id);
 

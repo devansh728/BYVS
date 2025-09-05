@@ -143,7 +143,7 @@ public class AdminContoller {
         }
         List<Task> createdTasks = new ArrayList<>();
         if(!request.assignToAll){
-            UserProfile Profile = userProfileRepository.findByUserEmail(request.assigneeIdGmail).orElseThrow(()-> new RuntimeException("Profile not found"));
+            UserProfile Profile = userProfileRepository.findByEmail(request.assigneeIdGmail).orElseThrow(()-> new RuntimeException("Profile not found"));
             User assignee = userRepository.findById(Profile.getUser().getId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
             Task task = new Task();
