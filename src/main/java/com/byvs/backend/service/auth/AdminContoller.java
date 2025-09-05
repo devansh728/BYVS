@@ -12,14 +12,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -45,7 +51,9 @@ public class AdminContoller {
             Integer rewardCoins,
 
             @NotNull(message = "Assignee ID is required")
-            Long assigneeId,
+            String assigneeIdGmail,
+
+            Boolean assignToAll,
 
             @NotNull(message = "Deadline is required")
             @Future(message = "Deadline must be in the future")
@@ -123,28 +131,58 @@ public class AdminContoller {
     }
 
     @PostMapping("/tasks")
-    public ResponseEntity<Task> createTask(@RequestBody @Valid TaskRequest request) {
-        User admin = userRepository.findByPhone("+919026562139").orElse(null);
-        User assignee = userRepository.findById(request.assigneeId())
+    public ResponseEntity<?> createTask(@AuthenticationPrincipal UserDetails principal, @RequestBody @Valid TaskRequest request) {
+        if (principal == null || principal.getUsername() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(List.of("Authentication required"));
+        }
+        User admin = userRepository.findByPhone(principal.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        String role = isAdminUser(admin.getPhone()) ? "ADMIN" : "USER";
+        if(!role.equals("ADMIN")){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(List.of("YOU ARE NOT AN ADMIN"));
+        }
+        List<Task> createdTasks = new ArrayList<>();
+        if(!request.assignToAll){
+            UserProfile Profile = userProfileRepository.findByUserEmail(request.assigneeIdGmail).orElseThrow(()-> new RuntimeException("Profile not found"));
+            User assignee = userRepository.findById(Profile.getUser().getId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            Task task = new Task();
+            task.setTitle(request.title());
+            task.setDescription(request.description());
+            task.setRewardCoins(request.rewardCoins());
+            task.setDeadline(request.deadline());
+            task.setAssignedBy(admin);
+            task.setAssignedTo(assignee);
+            task.setCreatedAt(LocalDateTime.now());
+            createdTasks.add(taskRepository.save(task));
+        }else{
+            List<OfficeBearerApplication> application = officeBearerAppRepository.findAllApprovedWithUser();
+            List<User> assignees = application.stream()
+                    .map(OfficeBearerApplication::getUser)
+                    .toList();
+            for (User assignee : assignees) {
+                Task task = new Task();
+                task.setTitle(request.title());
+                task.setDescription(request.description());
+                task.setRewardCoins(request.rewardCoins());
+                task.setDeadline(request.deadline());
+                task.setAssignedBy(admin);
+                task.setAssignedTo(assignee);
+                task.setCreatedAt(LocalDateTime.now());
+                createdTasks.add(taskRepository.save(task));
+            }
+        }
 
-        Task task = new Task();
-        task.setTitle(request.title());
-        task.setDescription(request.description());
-        task.setRewardCoins(request.rewardCoins());
-        task.setDeadline(request.deadline());
-        task.setAssignedBy(admin);
-        task.setAssignedTo(assignee);
-        task.setCreatedAt(LocalDateTime.now());
-
-        task = taskRepository.save(task);
-
-        return ResponseEntity.ok(task);
+        return ResponseEntity.ok(createdTasks);
     }
     @GetMapping("/all-tasks")
     public ResponseEntity<List<Task>> getAllTask(){
         return ResponseEntity.ok(taskRepository.findAll());
 
+    }
+
+    private boolean isAdminUser(String username) {
+        return Arrays.asList("+919278101008", "9278101008", "8960384718", "+918960384718", "+919026562139", "9026562139").contains(username);
     }
 
 }
