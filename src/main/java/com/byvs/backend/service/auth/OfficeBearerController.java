@@ -133,6 +133,26 @@ public class OfficeBearerController {
         }
     }
 
+    @GetMapping("/get-Certificate")
+    public ResponseEntity<?> getCertificate(@AuthenticationPrincipal UserDetails userDetails){
+        User user = userRepository.findByPhone(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        OfficeBearerApplication application = appRepository.findByUserAndApprovedTrue(user)
+                .orElseThrow(() -> new RuntimeException("Not an office bearer"));
+
+        if(application.getApprovedAt() == null) {
+            return ResponseEntity.badRequest().body("Certificate not available yet");
+        }
+
+        Optional<byte[]> certificateDataOpt = Optional.ofNullable(user.getCertificateOfficeBearer());
+        if (certificateDataOpt.isEmpty() || certificateDataOpt.get().length == 0) {
+            return ResponseEntity.badRequest().body("Certificate not uploaded by admin");
+        }
+
+        return ResponseEntity.ok().body(certificateDataOpt.get());
+    }
+
     @GetMapping("/get-tasks")
     public ResponseEntity<List<Task>> getTheTask(@AuthenticationPrincipal UserDetails principal){
         User user = userRepository.findByPhone(principal.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
