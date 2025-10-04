@@ -48,6 +48,11 @@ public class User {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "certificate_office_bearer", columnDefinition = "BYTEA")
+    private byte[] certificateOfficeBearer;
+
     public void incrementVerifiedReferrals() {
         this.verifiedReferralsCount++;
     }

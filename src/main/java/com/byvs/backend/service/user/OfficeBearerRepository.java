@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface OfficeBearerRepository extends JpaRepository<OfficeBearerApplication,Long> {
     Page<OfficeBearerApplication> findByApprovedTrue(Pageable pageable);
 
+    List<OfficeBearerApplication> findByApprovedTrue();
+
     Page<OfficeBearerApplication> findByApprovedFalse(Pageable pageable);
 
     Optional<OfficeBearerApplication> findByDistrict(String district);

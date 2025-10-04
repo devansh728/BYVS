@@ -19,10 +19,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,32 +42,24 @@ public class AdminContoller {
     private final TaskRepository taskRepository;
 
     public record TaskRequest(
-            @NotBlank(message = "Title is required")
-            String title,
+            @NotBlank(message = "Title is required") String title,
 
-            @NotBlank(message = "Description is required")
-            String description,
+            @NotBlank(message = "Description is required") String description,
 
-            @NotNull(message = "Reward coins is required")
-            @Min(value = 1, message = "Reward coins must be at least 1")
-            Integer rewardCoins,
+            @NotNull(message = "Reward coins is required") @Min(value = 1, message = "Reward coins must be at least 1") Integer rewardCoins,
 
-            @NotNull(message = "Assignee ID is required")
-            String assigneeIdGmail,
+            @NotNull(message = "Assignee ID is required") String assigneeIdGmail,
 
             Boolean assignToAll,
 
-            @NotNull(message = "Deadline is required")
-            @Future(message = "Deadline must be in the future")
-            LocalDateTime deadline
-    ) {}
+            @NotNull(message = "Deadline is required") @Future(message = "Deadline must be in the future") LocalDateTime deadline) {
+    }
 
     @GetMapping("/office-bearer-applications")
     public ResponseEntity<Page<OfficeBearerApplication>> getApplications(
             @RequestParam(defaultValue = "false") Boolean approved,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
+            @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<OfficeBearerApplication> applications;
 
@@ -81,8 +75,7 @@ public class AdminContoller {
     @GetMapping("/all-task")
     public ResponseEntity<Page<Task>> getAllTask(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
+            @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Task> applications;
 
@@ -115,10 +108,9 @@ public class AdminContoller {
                     profile.getDistrict(),
                     profile.getState(),
                     application.getPosition(),
-                    user.getFullName()
-            );
+                    user.getFullName());
             log.info("Initiated welcome email sending for {}", profile.getEmail());
-        }catch(Exception e){
+        } catch (Exception e) {
             log.error("Error while initiating welcome email for {}", profile.getEmail(), e);
         }
 
@@ -126,24 +118,25 @@ public class AdminContoller {
                 "message", "Application approved successfully",
                 "userId", user.getId(),
                 "email", profile.getEmail(),
-                "name", user.getFullName()
-        ));
+                "name", user.getFullName()));
     }
 
     @PostMapping("/tasks")
-    public ResponseEntity<?> createTask(@AuthenticationPrincipal UserDetails principal, @RequestBody @Valid TaskRequest request) {
+    public ResponseEntity<?> createTask(@AuthenticationPrincipal UserDetails principal,
+            @RequestBody @Valid TaskRequest request) {
         if (principal == null || principal.getUsername() == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(List.of("Authentication required"));
         }
         User admin = userRepository.findByPhone(principal.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         String role = isAdminUser(admin.getPhone()) ? "ADMIN" : "USER";
-        if(!role.equals("ADMIN")){
+        if (!role.equals("ADMIN")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(List.of("YOU ARE NOT AN ADMIN"));
         }
         List<Task> createdTasks = new ArrayList<>();
-        if(!request.assignToAll){
-            UserProfile Profile = userProfileRepository.findByEmail(request.assigneeIdGmail).orElseThrow(()-> new RuntimeException("Profile not found"));
+        if (!request.assignToAll) {
+            UserProfile Profile = userProfileRepository.findByEmail(request.assigneeIdGmail)
+                    .orElseThrow(() -> new RuntimeException("Profile not found"));
             User assignee = userRepository.findById(Profile.getUser().getId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
             Task task = new Task();
@@ -155,7 +148,7 @@ public class AdminContoller {
             task.setAssignedTo(assignee);
             task.setCreatedAt(LocalDateTime.now());
             createdTasks.add(taskRepository.save(task));
-        }else{
+        } else {
             List<OfficeBearerApplication> application = officeBearerAppRepository.findAllApprovedWithUser();
             List<User> assignees = application.stream()
                     .map(OfficeBearerApplication::getUser)
@@ -175,14 +168,77 @@ public class AdminContoller {
 
         return ResponseEntity.ok(createdTasks);
     }
+
     @GetMapping("/all-tasks")
-    public ResponseEntity<List<Task>> getAllTask(){
+    public ResponseEntity<List<Task>> getAllTask() {
         return ResponseEntity.ok(taskRepository.findAll());
 
     }
 
+    @GetMapping("/office-bearer-applications/approved")
+    public ResponseEntity<?> getApprovedOfficeBearer(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<OfficeBearerApplication> applicationsPage = officeBearerAppRepository.findByApprovedTrue(pageable);
+        List<OfficeBearerApplication> applications = applicationsPage.getContent();
+
+        List<User> assignees = applications.stream()
+                .map(OfficeBearerApplication::getUser)
+                .toList();
+
+        Map<User, UserProfile> userProfileMap = userProfileRepository.findByUserIn(assignees)
+                .stream()
+                .collect(Collectors.toMap(UserProfile::getUser, profile -> profile));
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("currentPage", applicationsPage.getNumber());
+        response.put("totalPages", applicationsPage.getTotalPages());
+        response.put("totalElements", applicationsPage.getTotalElements());
+        response.put("pageSize", applicationsPage.getSize());
+        response.put("userProfiles", userProfileMap);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/office-bearer-applications/approved/certificate-upload")
+    public ResponseEntity<?> uploadCertificateForApprovedOfficeBearer(@RequestParam @NotNull Long userId,
+            @RequestPart(required = false) MultipartFile certificate ) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        OfficeBearerApplication application = officeBearerAppRepository.findByUserAndApprovedTrue(user)
+                .orElseThrow(() -> new RuntimeException("No approved office bearer application found for this user"));
+
+        if(!application.getApproved()) {
+            return ResponseEntity.badRequest().body("User is not an approved office bearer");
+        }
+
+        UserProfile profile = userProfileRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Profile not found"));
+
+        try {
+            user.setCertificateOfficeBearer(certificate.getBytes());
+            userRepository.save(user);
+        } catch (java.io.IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "message", "Failed to upload certificate",
+                    "error", e.getMessage()
+            ));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Certificate uploaded successfully",
+                "userId", user.getId(),
+                "email", profile.getEmail(),
+                "name", user.getFullName(),
+                "certificateUrl", certificate.getOriginalFilename()));
+    }
+
     private boolean isAdminUser(String username) {
-        return Arrays.asList("+919278101008", "9278101008", "8960384718", "+918960384718", "+919026562139", "9026562139").contains(username);
+        return Arrays
+                .asList("+919278101008", "9278101008", "8960384718", "+918960384718", "+919026562139", "9026562139")
+                .contains(username);
     }
 
 }
