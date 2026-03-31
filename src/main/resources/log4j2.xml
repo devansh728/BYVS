@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+    <Properties>
+        <Property name="log-file-name">byvs</Property>
+        <Property name="MAX_PRIMARY_FILE_SIZE">25MB</Property>
+        <Property name="log-file-directory">logs</Property>
+        <Property name="log-pattern">%highlight{%d{yyyy-MM-dd HH:mm:ss.SSS} [%equals{%X{gtrn}}{}{GTRN-NA}][%equals{%X{requestchannel}}{}{NA}][%equals{%X{moduletrail}}{}{NA}][${hostName}][%15.15t] [%5p] [%-40.40c{1.}]:%L  - %m%n%ex}{FATAL=red, ERROR=red, WARN=yellow, INFO=green, DEBUG=cyan, TRACE=blue}</Property>
+    </Properties>
+    <Appenders>
+        <RollingFile name="Main-file-log" fileName="${log-file-directory}/${log-file-name}.log" filePattern="${log-file-directory}/${log-file-name}-%d{yyyy-MM-dd}-%i.log">
+            <PatternLayout pattern="${log-pattern}" />
+            <Policies>
+                <OnStartupTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="${MAX_PRIMARY_FILE_SIZE}" />
+                <TimeBasedTriggeringPolicy />
+            </Policies>
+            <DefaultRolloverStrategy max="20" fileIndex="min" />
+        </RollingFile>
+        <Console name="CONSOLE" target="SYSTEM_OUT">
+            <PatternLayout pattern="${log-pattern}" />
+        </Console>
+        <Async name="AsyncLogging" includeLocation="true">
+            <AppenderRef ref="Main-file-log" />
+        </Async>
+        <Failover name="AsyncFailOverToConsole" primary="AsyncLogging">
+            <Failovers>
+                <AppenderRef ref="CONSOLE"/>
+            </Failovers>
+        </Failover>
+    </Appenders>
+    <Loggers>
+        <Root level="DEBUG">
+            <AppenderRef ref="CONSOLE" />
+            <AppenderRef ref="AsyncFailOverToConsole" />
+        </Root>
+        <Logger name="com.byvs" level="DEBUG"  />
+        <Logger name="org.springframework" level="DEBUG" />
+        <Logger name="org.apache" level="DEBUG" />
+        <Logger name="org.postgresql" level="DEBUG" />
+        <Logger name="com.zaxxer" level="DEBUG" />
+        <Logger name="org.hibernate" level="DEBUG"  />
+        <Logger name="com.oracle" level="DEBUG"  />
+        <Logger name="org.activiti" level="DEBUG"  />
+
+        <!--        <Logger name="org.dbunit" level="DEBUG"/>-->
+    </Loggers>
+</Configuration>
